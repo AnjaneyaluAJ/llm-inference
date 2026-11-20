@@ -45,16 +45,45 @@ Each workload is run (a) at fixed concurrency 1, 2, 4, ... 256, and (b) at a fix
 
 ## Pre-registered prediction (single user, decode)
 
-At concurrency 1 each new token requires reading all model weights from GPU memory, so decode speed
-is bounded by memory bandwidth:
+Committed before any engine was benchmarked (2026-11-20).
 
-- Weights: ~8.2B parameters x 2 bytes = ~16.4 GB (exact byte count to be read from the
-  checkpoint and filled in before the first run)
-- L40S memory bandwidth: 864 GB/s (spec sheet; measured value to be added)
-- Upper bound: 864 / 16.4 = **~53 tokens/s, ~19 ms per token**
+At concurrency 1 each new token requires reading every weight once from GPU memory (the input
+embedding table is the exception: only one row is gathered). Decode speed is therefore bounded by
+memory bandwidth.
 
-Prediction: every engine lands below this bound; the best reaches 80-90% of it. The final numbers
-are committed here before any engine is benchmarked.
+| Input | Value | Source |
+|---|---|---|
+| Weights, total | 16.381 GB (16,381,470,720 bytes) | safetensors headers, Qwen/Qwen3-8B @ b968826 |
+| Input embedding (not read per token) | 1.245 GB | same |
+| **Bytes read per decoded token** | **15.137 GB** | difference; KV cache adds ~144 KiB per context token (<1% here) |
+| L40S bandwidth, spec sheet | 864 GB/s | NVIDIA |
+| L40S bandwidth, measured read | 746.7 GB/s (3 runs, ±0.1) | `bench/membw.py`, 4 GiB bf16 sum, torch 2.14 |
+| L40S bandwidth, measured copy | 634.2 GB/s | same |
+
+Ceilings at concurrency 1:
+
+- Spec-sheet ceiling: 864 / 15.137 = **57.1 tokens/s (17.5 ms per token)**. No engine can beat this.
+- Measured-bandwidth ceiling: 746.7 / 15.137 = **49.3 tokens/s (20.3 ms per token)**.
+
+**Prediction:** at concurrency 1 on the `generate` workload, the fastest engine reaches 80-95% of
+the measured-bandwidth ceiling: **39-47 tokens/s, i.e. 21-25 ms per output token**, and all three
+engines are within 15% of each other. Single-user decode is a memory-read problem, so the engines
+should differ little there; they should differ much more under load (batching, scheduling,
+prefill). If an engine beats 49.3 tokens/s, its weight-reading kernels beat a plain PyTorch
+reduction, which is a finding in itself, not an error.
+
+## Latency targets (SLOs) used for goodput
+
+Fixed before the first measurement. A request rate "meets the SLO" when p99 TTFT and p99 TPOT both
+stay within the target over the whole run.
+
+| Workload | p99 TTFT | p99 TPOT |
+|---|---|---|
+| chat | 2.0 s | 50 ms |
+| rag | 3.0 s | 50 ms |
+| generate | 1.0 s | 50 ms |
+
+50 ms per token = 20 tokens/s, faster than people read.
 
 ## Order of work
 
