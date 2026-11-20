@@ -79,6 +79,8 @@ async def one_request(session, url, model, prompt, output_len, extra):
     rec["e2e"] = time.perf_counter() - rec["start"]
     if rec["error"] is None and rec["output_tokens"] != output_len:
         rec["error"] = f"output_tokens={rec['output_tokens']} != {output_len}"
+    if rec["error"] is None and rec["ttft"] is None:
+        rec["error"] = f"no text chunks received (usage said {rec['output_tokens']} tokens)"
     return rec
 
 
