@@ -14,7 +14,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 PY = "/data/venv/bin/python"
 HF = "/data/hf"
-KV_TOKENS = 147456  # matched KV-cache capacity for the "matched" config: 9216 x 16 = 4608 x 32 tokens
+KV_TOKENS = 147456  # matched KV-cache capacity for the "matched" config: 2304 x 64 (vLLM) = 4608 x 32 (TRT-LLM) tokens
 
 IMAGES = {
     "vllm": "vllm/vllm-openai:v0.34.0",
@@ -28,7 +28,9 @@ def engine_cmd(engine, config):
     if engine == "vllm":
         cmd = ["--model", "Qwen/Qwen3-8B", "--max-model-len", "8192"]
         if config == "matched":
-            cmd += ["--num-gpu-blocks-override", str(KV_TOKENS // 16)]
+            # vLLM v0.34 picks the block size itself (64 tokens for this model); set it explicitly so
+            # the block count maps to exactly KV_TOKENS tokens. 9216 blocks at the auto size asked for 81 GiB.
+            cmd += ["--block-size", "64", "--num-gpu-blocks-override", str(KV_TOKENS // 64)]
         return cmd
     if engine == "sglang":
         cmd = ["python3", "-m", "sglang.launch_server", "--model-path", "Qwen/Qwen3-8B", "--host", "0.0.0.0",
