@@ -46,6 +46,9 @@ def pct(xs, p):
     return xs[f] + (xs[c] - xs[f]) * (k - f)
 
 
+DUMP_RAW = False  # set by --dump-bad: keep each response's raw stream lines until it is checked
+
+
 async def one_request(session, url, model, prompt, output_len, extra):
     body = {
         "model": model, "prompt": prompt, "max_tokens": output_len, "temperature": 0.0,
@@ -53,12 +56,15 @@ async def one_request(session, url, model, prompt, output_len, extra):
     }
     rec = {"start": time.perf_counter(), "ttft": None, "chunk_times": [], "output_tokens": None,
            "prompt_tokens": None, "error": None}
+    raw_lines = [] if DUMP_RAW else None
     try:
         async with session.post(url, json=body) as r:
             if r.status != 200:
                 rec["error"] = f"HTTP {r.status}: {(await r.text())[:200]}"
                 return rec
             async for raw in r.content:
+                if raw_lines is not None:
+                    raw_lines.append(raw.decode(errors="replace"))
                 line = raw.decode().strip()
                 if not line.startswith("data:"):
                     continue
@@ -81,6 +87,8 @@ async def one_request(session, url, model, prompt, output_len, extra):
         rec["error"] = f"output_tokens={rec['output_tokens']} != {output_len}"
     if rec["error"] is None and rec["ttft"] is None:
         rec["error"] = f"no text chunks received (usage said {rec['output_tokens']} tokens)"
+        if raw_lines is not None:
+            rec["raw"] = raw_lines
     return rec
 
 
@@ -134,7 +142,12 @@ async def run(args):
     out.with_suffix(".json").write_text(json.dumps(summary, indent=1))
     with open(out.with_suffix(".requests.jsonl"), "w") as f:
         for r in recs:
-            f.write(json.dumps({k: v for k, v in r.items() if k != "chunk_times"} | {"n_chunks": len(r["chunk_times"])}) + "\n")
+            f.write(json.dumps({k: v for k, v in r.items() if k not in ("chunk_times", "raw")} | {"n_chunks": len(r["chunk_times"])}) + "\n")
+    bad = [r for r in recs if "raw" in r]
+    if bad:
+        with open(out.with_suffix(".bad_streams.jsonl"), "w") as f:
+            for r in bad:
+                f.write(json.dumps({"error": r["error"], "raw": r["raw"]}) + "\n")
     print(json.dumps({k: summary[k] for k in ("requests_ok", "requests_err", "req_per_s", "output_tok_per_s", "ttft_ms", "tpot_ms")}))
 
 
@@ -153,4 +166,7 @@ if __name__ == "__main__":
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--extra-body", default="", help="JSON merged into each request body")
     ap.add_argument("--out", required=True)
-    asyncio.run(run(ap.parse_args()))
+    ap.add_argument("--dump-bad", action="store_true", help="save the raw stream of requests that arrive with no text")
+    a = ap.parse_args()
+    DUMP_RAW = a.dump_bad
+    asyncio.run(run(a))
