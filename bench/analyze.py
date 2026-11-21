@@ -19,7 +19,14 @@ def main(root):
     errors = []
     for f in root.glob("*/rep*/*/*_c*.json"):
         config, rep, engine = f.parts[-4], f.parts[-3], f.parts[-2]
-        w, c = f.stem.rsplit("_c", 1)
+        stem = f.stem
+        if stem.endswith("_rerun"):
+            # re-measured after the original run of this point crashed (see the .err file); it
+            # replaces the original only when the original produced no result
+            stem = stem[:-len("_rerun")]
+            if f.with_name(stem + ".json").exists():
+                continue
+        w, c = stem.rsplit("_c", 1)
         d = json.loads(f.read_text())
         if d["requests_err"]:
             errors.append((str(f), d["requests_err"], d["errors_sample"][:2]))

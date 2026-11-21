@@ -1,0 +1,568 @@
++ python3 -m venv /data/venv
++ /data/venv/bin/pip -q install -U 'huggingface_hub[hf_xet]'
++ docker pull vllm/vllm-openai:v0.34.0
++ HF_HOME=/data/hf
++ /data/venv/bin/hf download Qwen/Qwen3-8B --exclude '*.pth'
+[90mHint: The `hf-cli` skill is not installed. Run `hf skills add -g` to teach your AI agents how to use the `hf` CLI.[0m
+v0.34.0: Pulling from vllm/vllm-openai
+Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 15 files:  60%|██████    | 9/15 [00:00<00:00, 82.29it/s]f007a2d20660: Pulling fs layer
+168bdf077e38: Pulling fs layer
+e41e886af3cd: Pulling fs layer
+297a3e32e3eb: Pulling fs layer
+89d5aef3362f: Pulling fs layer
+0215040ad1a4: Pulling fs layer
+5b7b6b349d38: Pulling fs layer
+119e6df9fc6a: Pulling fs layer
+1dbd05959586: Pulling fs layer
+c567a87f21d2: Pulling fs layer
+70f87b6ed43e: Pulling fs layer
+33f5f07e9320: Pulling fs layer
+526d5438c009: Pulling fs layer
+e46565c51c48: Pulling fs layer
+cfc02c41139a: Pulling fs layer
+b1dceeafcd5e: Pulling fs layer
+cf57d2112d89: Pulling fs layer
+0b3b5bd92824: Pulling fs layer
+4b9fc4331be5: Pulling fs layer
+69811b3f6ebf: Pulling fs layer
+eb24958619d0: Pulling fs layer
+bf6b8a95892c: Pulling fs layer
+2626ec1d2684: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+41eaa41e205a: Pulling fs layer
+31fbb8600117: Pulling fs layer
+754032b1d08d: Pulling fs layer
+d10ed876b90b: Pulling fs layer
+13eb87ac616f: Pulling fs layer
+d121b786a087: Pulling fs layer
+2b27998691cb: Pulling fs layer
+8edf1342a332: Pulling fs layer
+68c7c8dcdcbd: Pulling fs layer
+fa1765b09db3: Pulling fs layer
+9c6151e68671: Pulling fs layer
+2dcfbc348cde: Pulling fs layer
+0c17c37cb133: Pulling fs layer
+b14564de6d7c: Pulling fs layer
+41eaa41e205a: Pulling fs layer
+648f7856342e: Pulling fs layer
+f007a2d20660: Download complete
+e41e886af3cd: Download complete
+297a3e32e3eb: Download complete
+70f87b6ed43e: Download complete
+1dbd05959586: Download complete
+168bdf077e38: Download complete
+526d5438c009: Download complete
+33f5f07e9320: Download complete
+89d5aef3362f: Download complete
+e46565c51c48: Download complete
+cfc02c41139a: Download complete
+4b9fc4331be5: Download complete
+0215040ad1a4: Download complete
+cf57d2112d89: Download complete
+bf6b8a95892c: Download complete
+c567a87f21d2: Download complete
+cf57d2112d89: Pull complete
+c567a87f21d2: Pull complete
+0b3b5bd92824: Download complete
+eb24958619d0: Download complete
+4f4fb700ef54: Download complete
+2626ec1d2684: Download complete
+41eaa41e205a: Download complete
+69811b3f6ebf: Download complete
+b1dceeafcd5e: Download complete
+0b3b5bd92824: Pull complete
+70f87b6ed43e: Pull complete
+526d5438c009: Pull complete
+297a3e32e3eb: Pull complete
+e46565c51c48: Pull complete
+119e6df9fc6a: Download complete
+d10ed876b90b: Download complete
+d121b786a087: Download complete
+13eb87ac616f: Download complete
+2b27998691cb: Download complete
+b1dceeafcd5e: Pull complete
+31fbb8600117: Download complete
+fa1765b09db3: Download complete
+9c6151e68671: Download complete
+68c7c8dcdcbd: Download complete
+0c17c37cb133: Download complete
+8edf1342a332: Download complete
+b14564de6d7c: Download complete
+2dcfbc348cde: Download complete
+Fetching 15 files:  73%|███████▎  | 11/15 [00:19<00:00, 82.29it/s]5b7b6b349d38: Download complete
+Fetching 15 files:  80%|████████  | 12/15 [00:37<00:11,  4.00s/it]5b7b6b349d38: Pull complete
+4b9fc4331be5: Pull complete
+69811b3f6ebf: Pull complete
+eb24958619d0: Pull complete
+2626ec1d2684: Pull complete
+119e6df9fc6a: Pull complete
+168bdf077e38: Pull complete
+41eaa41e205a: Pull complete
+d10ed876b90b: Pull complete
+fa1765b09db3: Pull complete
+Fetching 15 files:  87%|████████▋ | 13/15 [00:41<00:08,  4.06s/it]Fetching 15 files: 100%|██████████| 15/15 [00:45<00:00,  3.05s/it]
+[32m✓ Downloaded[0m
+  path: /data/hf/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218
+754032b1d08d: Download complete
+648f7856342e: Download complete
+648f7856342e: Pull complete
+13eb87ac616f: Pull complete
+754032b1d08d: Pull complete
+2b27998691cb: Pull complete
+33f5f07e9320: Pull complete
+0215040ad1a4: Pull complete
+1dbd05959586: Pull complete
+bf6b8a95892c: Pull complete
+31fbb8600117: Pull complete
+cfc02c41139a: Pull complete
+4f4fb700ef54: Pull complete
+8edf1342a332: Pull complete
+e41e886af3cd: Pull complete
+89d5aef3362f: Pull complete
+d121b786a087: Pull complete
+2dcfbc348cde: Pull complete
+9c6151e68671: Pull complete
+68c7c8dcdcbd: Pull complete
+0c17c37cb133: Pull complete
+f007a2d20660: Pull complete
+b14564de6d7c: Pull complete
+Digest: sha256:20fdb089454afbb324efa4110a2c025ff7b27cc1a086e07aa580b18df8ad1ce1
+Status: Downloaded newer image for vllm/vllm-openai:v0.34.0
+docker.io/vllm/vllm-openai:v0.34.0
++ docker pull lmsysorg/sglang:v0.5.23
+v0.5.23: Pulling from lmsysorg/sglang
+730c8029606b: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+fb3828fbc696: Pulling fs layer
+6368b89ea9cf: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+7e811f7221c2: Pulling fs layer
+3406c96ff718: Pulling fs layer
+ccf9c70a85fc: Pulling fs layer
+d3e629367990: Pulling fs layer
+5662b9d077ee: Pulling fs layer
+d1ccef44802e: Pulling fs layer
+8bd080c2e4b2: Pulling fs layer
+5abf2bff7798: Pulling fs layer
+12b805bb314a: Pulling fs layer
+59a6592bb3bf: Pulling fs layer
+ff4b5cb7fec3: Pulling fs layer
+dca5e93143cb: Pulling fs layer
+a7e8109b8315: Pulling fs layer
+64c407c7662c: Pulling fs layer
+24e9f416bf66: Pulling fs layer
+686836b25fd2: Pulling fs layer
+eae481803d32: Pulling fs layer
+95e35692d3cc: Pulling fs layer
+9e3a89aa5f23: Pulling fs layer
+220c1278817a: Pulling fs layer
+5e25946ba40d: Pulling fs layer
+4f39418cd589: Pulling fs layer
+f0af354daeda: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+7e6e628dfcf6: Pulling fs layer
+689b91d88a0f: Pulling fs layer
+a30da298bda6: Pulling fs layer
+b568c50bcdfd: Pulling fs layer
+6ee5e3aed0b1: Pulling fs layer
+cb2c23dbe0f1: Pulling fs layer
+21e0ed254c8b: Pulling fs layer
+18cc4a0367f0: Pulling fs layer
+cb3db0ad5ae0: Pulling fs layer
+b533a7368b7d: Pulling fs layer
+7d5bf360fe3e: Pulling fs layer
+3317210dcf9a: Pulling fs layer
+cc689184d8c0: Pulling fs layer
+400821fd86ee: Pulling fs layer
+adebc1576f3c: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+127a30705ed4: Pulling fs layer
+3f40ab09d1fc: Pulling fs layer
+f99bfd0537cd: Pulling fs layer
+059fce6c4f38: Pulling fs layer
+422df9348ee2: Pulling fs layer
+b2ca1518ee8a: Pulling fs layer
+dbe8e38f5a59: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+43082d5f32ca: Pulling fs layer
+daf53edca537: Pulling fs layer
+321c3b553380: Pulling fs layer
+00fad911c893: Pulling fs layer
+a56e4696faf5: Pulling fs layer
+45b3ea72fe13: Pulling fs layer
+5a5a67337324: Pulling fs layer
+f97f693ab8e3: Pulling fs layer
+fe94765fbfcd: Pulling fs layer
+2c276d5615de: Pulling fs layer
+cbfad2966806: Pulling fs layer
+e86d345d6d10: Pulling fs layer
+0d1f02a4d174: Pulling fs layer
+6b16818028cd: Pulling fs layer
+f50a2af9072a: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+efe807e09eb1: Pulling fs layer
+4f4fb700ef54: Already exists
+730c8029606b: Download complete
+fb3828fbc696: Download complete
+6368b89ea9cf: Download complete
+d3e629367990: Download complete
+3406c96ff718: Download complete
+ccf9c70a85fc: Download complete
+44136fa355b3: Download complete
+8bd080c2e4b2: Download complete
+d1ccef44802e: Download complete
+12b805bb314a: Download complete
+5abf2bff7798: Download complete
+59a6592bb3bf: Download complete
+95e35692d3cc: Download complete
+686836b25fd2: Download complete
+64c407c7662c: Download complete
+ff4b5cb7fec3: Download complete
+24e9f416bf66: Download complete
+5662b9d077ee: Download complete
+220c1278817a: Download complete
+9e3a89aa5f23: Download complete
+4f39418cd589: Download complete
+dca5e93143cb: Download complete
+5e25946ba40d: Download complete
+a7e8109b8315: Download complete
+7e6e628dfcf6: Download complete
+f0af354daeda: Download complete
+b568c50bcdfd: Download complete
+689b91d88a0f: Download complete
+689b91d88a0f: Pull complete
+95e35692d3cc: Pull complete
+5e25946ba40d: Pull complete
+f0af354daeda: Pull complete
+ccf9c70a85fc: Pull complete
+730c8029606b: Pull complete
+cb2c23dbe0f1: Download complete
+18cc4a0367f0: Download complete
+6ee5e3aed0b1: Download complete
+21e0ed254c8b: Download complete
+cb3db0ad5ae0: Download complete
+3317210dcf9a: Download complete
+cc689184d8c0: Download complete
+400821fd86ee: Download complete
+7d5bf360fe3e: Download complete
+127a30705ed4: Download complete
+059fce6c4f38: Download complete
+3f40ab09d1fc: Download complete
+eae481803d32: Download complete
+adebc1576f3c: Download complete
+a30da298bda6: Download complete
+b2ca1518ee8a: Download complete
+43082d5f32ca: Download complete
+dbe8e38f5a59: Download complete
+daf53edca537: Download complete
+a56e4696faf5: Download complete
+321c3b553380: Download complete
+45b3ea72fe13: Download complete
+fe94765fbfcd: Download complete
+f97f693ab8e3: Download complete
+00fad911c893: Download complete
+cbfad2966806: Download complete
+f99bfd0537cd: Download complete
+0d1f02a4d174: Download complete
+6b16818028cd: Download complete
+422df9348ee2: Download complete
+4659e0e70924: Download complete
+efe807e09eb1: Download complete
+a30da298bda6: Pull complete
+e86d345d6d10: Download complete
+5a5a67337324: Download complete
+21e0ed254c8b: Pull complete
+cb3db0ad5ae0: Pull complete
+f50a2af9072a: Download complete
+8bd080c2e4b2: Pull complete
+2c276d5615de: Download complete
+7e811f7221c2: Download complete
+b533a7368b7d: Download complete
+b533a7368b7d: Pull complete
+cc689184d8c0: Pull complete
+400821fd86ee: Pull complete
+adebc1576f3c: Pull complete
+127a30705ed4: Pull complete
+3f40ab09d1fc: Pull complete
+4f4fb700ef54: Pull complete
+f99bfd0537cd: Pull complete
+d1ccef44802e: Pull complete
+5abf2bff7798: Pull complete
+daf53edca537: Pull complete
+321c3b553380: Pull complete
+24e9f416bf66: Pull complete
+422df9348ee2: Pull complete
+059fce6c4f38: Pull complete
+b2ca1518ee8a: Pull complete
+a56e4696faf5: Pull complete
+45b3ea72fe13: Pull complete
+7e811f7221c2: Pull complete
+7e6e628dfcf6: Pull complete
+efe807e09eb1: Pull complete
+b568c50bcdfd: Pull complete
+eae481803d32: Pull complete
+d3e629367990: Pull complete
+43082d5f32ca: Pull complete
+ff4b5cb7fec3: Pull complete
+dbe8e38f5a59: Pull complete
+fb3828fbc696: Pull complete
+6ee5e3aed0b1: Pull complete
+64c407c7662c: Pull complete
+220c1278817a: Pull complete
+18cc4a0367f0: Pull complete
+3406c96ff718: Pull complete
+6368b89ea9cf: Pull complete
+a7e8109b8315: Pull complete
+00fad911c893: Pull complete
+5a5a67337324: Pull complete
+e86d345d6d10: Pull complete
+2c276d5615de: Pull complete
+12b805bb314a: Pull complete
+cb2c23dbe0f1: Pull complete
+7d5bf360fe3e: Pull complete
+9e3a89aa5f23: Pull complete
+cbfad2966806: Pull complete
+686836b25fd2: Pull complete
+0d1f02a4d174: Pull complete
+3317210dcf9a: Pull complete
+6b16818028cd: Pull complete
+dca5e93143cb: Pull complete
+f50a2af9072a: Pull complete
+5662b9d077ee: Pull complete
+59a6592bb3bf: Pull complete
+4f39418cd589: Pull complete
+f97f693ab8e3: Pull complete
+fe94765fbfcd: Pull complete
+Digest: sha256:f832b5c39559c9caa900b22ad37c76fcce66470676855c42052102c537812f1f
+Status: Downloaded newer image for lmsysorg/sglang:v0.5.23
+docker.io/lmsysorg/sglang:v0.5.23
++ docker pull nvcr.io/nvidia/tensorrt-llm/release:1.3.0
+1.3.0: Pulling from nvidia/tensorrt-llm/release
+4f4fb700ef54: Pulling fs layer
+a78f3f8e5c0f: Pulling fs layer
+3392c85ba19b: Pulling fs layer
+3c0a0482b40c: Pulling fs layer
+0f62a44e1a86: Pulling fs layer
+d927229eb133: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+ae420b230e7c: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+ca4ddf367226: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+f78601941769: Pulling fs layer
+fb9f0d9cb079: Pulling fs layer
+6b722b9f224a: Pulling fs layer
+46ffaa77e1b2: Pulling fs layer
+1b4fd78cdc09: Pulling fs layer
+a82982a92361: Pulling fs layer
+49c809a8874d: Pulling fs layer
+0c72536cbdb1: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+10ce40823830: Pulling fs layer
+2fb4d3697322: Pulling fs layer
+e51aee9c82ec: Pulling fs layer
+4d1b97f8de43: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+26a58c8c7ba6: Pulling fs layer
+cff385349c7e: Pulling fs layer
+0d45acf19291: Pulling fs layer
+d2774b076ab1: Pulling fs layer
+27247890311c: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+05e699ce0020: Pulling fs layer
+cf70bd5836f0: Pulling fs layer
+f0dec2f7f971: Pulling fs layer
+a662557b432c: Pulling fs layer
+eed7627f7c2a: Pulling fs layer
+89fa5f7d2f33: Pulling fs layer
+1eb3873cbb0b: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+edaf3c97ee3f: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+e7fdd0e9ba99: Pulling fs layer
+8551ac1ccc9a: Pulling fs layer
+281a7c8b6e72: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+a68f988f72f2: Pulling fs layer
+02f7331ecbb1: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+485d815b712a: Pulling fs layer
+e103c8dc233c: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4c92f9002535: Pulling fs layer
+e2a526d89598: Pulling fs layer
+970cc2e2797c: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+9ea4cdfe9375: Pulling fs layer
+7cf84599b830: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+208cce674b96: Pulling fs layer
+14457a86eaf5: Pulling fs layer
+4b2ae5a548d3: Pulling fs layer
+9f7791845106: Pulling fs layer
+111532a381d4: Pulling fs layer
+0fe742473c26: Pulling fs layer
+9a4687f0c2cc: Pulling fs layer
+8231548f3a3c: Pulling fs layer
+2514d894896e: Pulling fs layer
+1b659361e1ed: Pulling fs layer
+da38876ae8d1: Pulling fs layer
+53bc96116f62: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+0a1b041e93bd: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+b91ebb04cacb: Pulling fs layer
+21d25c5294eb: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+e907f00516d2: Pulling fs layer
+b82f86ac2f27: Pulling fs layer
+b862818f56c4: Pulling fs layer
+d061efc60c85: Pulling fs layer
+d107a68e9c6e: Pulling fs layer
+4f4fb700ef54: Already exists
+0f62a44e1a86: Download complete
+a78f3f8e5c0f: Download complete
+ca4ddf367226: Download complete
+d927229eb133: Download complete
+6b722b9f224a: Download complete
+3c0a0482b40c: Download complete
+3392c85ba19b: Download complete
+46ffaa77e1b2: Download complete
+1b4fd78cdc09: Download complete
+fb9f0d9cb079: Download complete
+10ce40823830: Download complete
+26a58c8c7ba6: Download complete
+4d1b97f8de43: Download complete
+ae420b230e7c: Download complete
+2fb4d3697322: Download complete
+0c72536cbdb1: Download complete
+cff385349c7e: Download complete
+d2774b076ab1: Download complete
+0d45acf19291: Download complete
+e51aee9c82ec: Download complete
+e51aee9c82ec: Pull complete
+ca4ddf367226: Pull complete
+0d45acf19291: Pull complete
+a662557b432c: Download complete
+27247890311c: Download complete
+1eb3873cbb0b: Download complete
+89fa5f7d2f33: Download complete
+8551ac1ccc9a: Download complete
+e7fdd0e9ba99: Download complete
+281a7c8b6e72: Download complete
+edaf3c97ee3f: Download complete
+02f7331ecbb1: Download complete
+485d815b712a: Download complete
+e103c8dc233c: Download complete
+05e699ce0020: Download complete
+cf70bd5836f0: Download complete
+e2a526d89598: Download complete
+970cc2e2797c: Download complete
+f0dec2f7f971: Download complete
+7cf84599b830: Download complete
+27247890311c: Pull complete
+a82982a92361: Download complete
+14457a86eaf5: Download complete
+208cce674b96: Download complete
+111532a381d4: Download complete
+9f7791845106: Download complete
+8231548f3a3c: Download complete
+da38876ae8d1: Download complete
+9a4687f0c2cc: Download complete
+53bc96116f62: Download complete
+eed7627f7c2a: Download complete
+b862818f56c4: Download complete
+1b659361e1ed: Download complete
+21d25c5294eb: Download complete
+2514d894896e: Download complete
+0fe742473c26: Download complete
+4b2ae5a548d3: Download complete
+cf70bd5836f0: Pull complete
+e907f00516d2: Download complete
+a78f3f8e5c0f: Pull complete
+0a1b041e93bd: Download complete
+1b4fd78cdc09: Pull complete
+26a58c8c7ba6: Pull complete
+4c92f9002535: Download complete
+fb9f0d9cb079: Pull complete
+a662557b432c: Pull complete
+89fa5f7d2f33: Pull complete
+f78601941769: Download complete
+e7fdd0e9ba99: Pull complete
+cff385349c7e: Pull complete
+4f4fb700ef54: Pull complete
+9ea4cdfe9375: Download complete
+a68f988f72f2: Download complete
+b91ebb04cacb: Download complete
+05e699ce0020: Pull complete
+49c809a8874d: Download complete
+84a5a13cf232: Download complete
+eed7627f7c2a: Pull complete
+49c809a8874d: Pull complete
+e907f00516d2: Pull complete
+d107a68e9c6e: Download complete
+b82f86ac2f27: Download complete
+d061efc60c85: Download complete
+b82f86ac2f27: Pull complete
+21d25c5294eb: Pull complete
+6b722b9f224a: Pull complete
+b91ebb04cacb: Pull complete
+1eb3873cbb0b: Pull complete
+f0dec2f7f971: Pull complete
+1b659361e1ed: Pull complete
+8231548f3a3c: Pull complete
+f78601941769: Pull complete
+a82982a92361: Pull complete
+d927229eb133: Pull complete
+281a7c8b6e72: Pull complete
+a68f988f72f2: Pull complete
+485d815b712a: Pull complete
+4c92f9002535: Pull complete
+3392c85ba19b: Pull complete
+d2774b076ab1: Pull complete
+4d1b97f8de43: Pull complete
+3c0a0482b40c: Pull complete
+02f7331ecbb1: Pull complete
+7cf84599b830: Pull complete
+14457a86eaf5: Pull complete
+0fe742473c26: Pull complete
+0a1b041e93bd: Pull complete
+10ce40823830: Pull complete
+edaf3c97ee3f: Pull complete
+ae420b230e7c: Pull complete
+9ea4cdfe9375: Pull complete
+208cce674b96: Pull complete
+2fb4d3697322: Pull complete
+9f7791845106: Pull complete
+da38876ae8d1: Pull complete
+0f62a44e1a86: Pull complete
+8551ac1ccc9a: Pull complete
+e103c8dc233c: Pull complete
+e2a526d89598: Pull complete
+0c72536cbdb1: Pull complete
+4b2ae5a548d3: Pull complete
+111532a381d4: Pull complete
+9a4687f0c2cc: Pull complete
+53bc96116f62: Pull complete
+2514d894896e: Pull complete
+46ffaa77e1b2: Pull complete
+d061efc60c85: Pull complete
+d107a68e9c6e: Pull complete
+970cc2e2797c: Pull complete
+b862818f56c4: Pull complete
+Digest: sha256:bb9a0c29b6b5f52e142c324eb2f4e2f114fc7573dc1c6d4d1495e4ebc6afdfbf
+Status: Downloaded newer image for nvcr.io/nvidia/tensorrt-llm/release:1.3.0
+nvcr.io/nvidia/tensorrt-llm/release:1.3.0
++ wait
++ docker images --digests
++ grep -E 'vllm|sglang|tensorrt'
+nvcr.io/nvidia/tensorrt-llm/release   1.3.0     sha256:bb9a0c29b6b5f52e142c324eb2f4e2f114fc7573dc1c6d4d1495e4ebc6afdfbf   bb9a0c29b6b5   3 days ago    54.4GB
+vllm/vllm-openai                      v0.34.0   sha256:20fdb089454afbb324efa4110a2c025ff7b27cc1a086e07aa580b18df8ad1ce1   20fdb089454a   4 days ago    36.3GB
+lmsysorg/sglang                       v0.5.23   sha256:f832b5c39559c9caa900b22ad37c76fcce66470676855c42052102c537812f1f   f832b5c39559   3 weeks ago   56.4GB
++ du -sh /data/hf
+16G	/data/hf
++ echo SETUP_DONE
+SETUP_DONE

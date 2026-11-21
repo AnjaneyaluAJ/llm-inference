@@ -1,0 +1,17 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+Traceback (most recent call last):
+  File "/data/llm-inference/bench/loadgen.py", line 154, in <module>
+    asyncio.run(run(ap.parse_args()))
+  File "/usr/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/data/llm-inference/bench/loadgen.py", line 117, in run
+    tpot = [(r["e2e"] - r["ttft"]) / (r["output_tokens"] - 1) for r in ok if r["output_tokens"] > 1]
+             ~~~~~~~~~^~~~~~~~~~~
+TypeError: unsupported operand type(s) for -: 'float' and 'NoneType'
