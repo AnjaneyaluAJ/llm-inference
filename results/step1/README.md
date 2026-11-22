@@ -74,6 +74,17 @@ counted as errors and excluded from all metrics (effect on throughput <0.5% at t
 **Not yet attributed:** it could be the engines' streaming or my client's parsing. Next session will
 capture the raw SSE stream before anything is claimed. (First seen as a client crash, fixed in e16dea3;
 the crashed point was re-measured: `defaults/rep1/trtllm/generate_c256_rerun.json`.)
+Follow-up in the [AIPerf cross-check](../toolcmp/README.md): 1 more in 11,982 requests on loadgen, 0 in
+11,982 on AIPerf, and none in 6,144 requests with raw-stream capture on. Still not attributed.
+
+## Cross-check with NVIDIA AIPerf
+
+The same engines were re-measured with NVIDIA AIPerf 0.14.0, run back to back with our client at
+1/16/64 users (3 repeats) ([details](../toolcmp/README.md)):
+- Throughput agreed within 1% at 24 of 27 points (range -1.3% to +2.1%).
+- Engine rankings and latency-target pass/fail were the same at every point.
+- Median first-token times at 16-64 users differ by up to 31%, because of AIPerf's re-used warm-up
+  prompts and slower request turnaround.
 
 ## Deviations from the plan
 
