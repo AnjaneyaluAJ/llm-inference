@@ -25,9 +25,9 @@ POINTS = {"chat": [1, 16, 64], "rag": [1, 16, 64], "generate": [1, 16, 64]}
 ENV = {"HF_HOME": sweep.HF, "HF_HUB_OFFLINE": "1", "PATH": "/usr/bin:/bin"}
 
 
-def run_loadgen(w, c, n, warm, seed, out, dump=False):
+def run_loadgen(w, c, n, warm, seed, out, dump=False, model=sweep.MODEL):
     pl, ol = sweep.WORKLOADS[w]
-    cmd = [sweep.PY, str(HERE / "loadgen.py"), "--prompt-len", str(pl), "--output-len", str(ol), "--concurrency", str(c),
+    cmd = [sweep.PY, str(HERE / "loadgen.py"), "--model", model, "--tokenizer", model, "--prompt-len", str(pl), "--output-len", str(ol), "--concurrency", str(c),
            "--num-requests", str(n), "--warmup", str(warm), "--seed", str(seed), "--out", str(out)]
     r = sweep.sh(cmd + (["--dump-bad"] if dump else []), env=ENV)
     if r.returncode:
@@ -35,9 +35,9 @@ def run_loadgen(w, c, n, warm, seed, out, dump=False):
     return (r.stdout.strip().splitlines() or [""])[-1][:160]
 
 
-def run_aiperf(w, c, n, warm, seed, outdir, raw=False):
+def run_aiperf(w, c, n, warm, seed, outdir, raw=False, model=sweep.MODEL):
     pl, ol = sweep.WORKLOADS[w]
-    cmd = [AIPERF, "profile", "--model", "Qwen/Qwen3-8B", "--url", "http://localhost:8000",
+    cmd = [AIPERF, "profile", "--model", model, "--url", "http://localhost:8000",
            "--endpoint-type", "completions", "--streaming", "--use-legacy-max-tokens",
            "--isl", str(pl), "--isl-stddev", "0", "--osl", str(ol), "--osl-stddev", "0",
            "--extra-inputs", "ignore_eos:true", "--concurrency", str(c), "--request-count", str(n),

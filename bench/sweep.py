@@ -23,23 +23,41 @@ IMAGES = {
 }
 
 
-def engine_cmd(engine, config):
-    """Server command line. 'defaults' = as shipped, only the max context length set."""
+MODEL = "Qwen/Qwen3-8B"
+LB_IMAGE = "nginx:1.27.3-alpine"
+
+
+def engine_cmd(engine, config, model=MODEL, tp=1, dp=1, port=8000):
+    """Server command line. 'defaults' = as shipped, only the max context length (and parallelism) set.
+
+    Data parallelism uses the engine's own option where it has one (vLLM --data-parallel-size,
+    SGLang --dp-size). TensorRT-LLM has none for dense models, so start() runs dp separate servers
+    behind an nginx least-connections proxy instead, and this returns one replica's command."""
     if engine == "vllm":
-        cmd = ["--model", "Qwen/Qwen3-8B", "--max-model-len", "8192"]
+        cmd = ["--model", model, "--max-model-len", "8192"]
+        if tp > 1:
+            cmd += ["--tensor-parallel-size", str(tp)]
+        if dp > 1:
+            cmd += ["--data-parallel-size", str(dp)]
         if config == "matched":
             # vLLM v0.34 picks the block size itself (64 tokens for this model); set it explicitly so
             # the block count maps to exactly KV_TOKENS tokens. 9216 blocks at the auto size asked for 81 GiB.
             cmd += ["--block-size", "64", "--num-gpu-blocks-override", str(KV_TOKENS // 64)]
         return cmd
     if engine == "sglang":
-        cmd = ["python3", "-m", "sglang.launch_server", "--model-path", "Qwen/Qwen3-8B", "--host", "0.0.0.0",
-               "--port", "8000", "--context-length", "8192"]
+        cmd = ["python3", "-m", "sglang.launch_server", "--model-path", model, "--host", "0.0.0.0",
+               "--port", str(port), "--context-length", "8192"]
+        if tp > 1:
+            cmd += ["--tp-size", str(tp)]
+        if dp > 1:
+            cmd += ["--dp-size", str(dp)]
         if config == "matched":
             cmd += ["--max-total-tokens", str(KV_TOKENS)]
         return cmd
     if engine == "trtllm":
-        cmd = ["trtllm-serve", "Qwen/Qwen3-8B", "--host", "0.0.0.0", "--port", "8000", "--max_seq_len", "8192"]
+        cmd = ["trtllm-serve", model, "--host", "0.0.0.0", "--port", str(port), "--max_seq_len", "8192"]
+        if tp > 1:
+            cmd += ["--tp_size", str(tp)]
         if config == "matched":
             cmd += ["--extra_llm_api_options", "/cfg/trtllm_matched.yaml"]
         return cmd
@@ -62,28 +80,72 @@ def sh(cmd, **kw):
     return subprocess.run(cmd, shell=isinstance(cmd, str), capture_output=True, text=True, **kw)
 
 
-def start(engine, config, logdir):
-    sh("docker rm -f eng")
+def containers():
+    return [n for n in sh("docker ps -a --format '{{.Names}}'").stdout.split() if n == "lb" or n.startswith("eng")]
+
+
+def stop_all():
+    for n in containers():
+        sh(["docker", "rm", "-f", n])
+
+
+def server_logs():
+    return "\n".join(f"===== {n} =====\n" + sh(f"docker logs {n} 2>&1").stdout[-2_000_000:] for n in containers())
+
+
+def _run(name, engine, cmd, gpus="all", port=8000):
     cfgdir = HERE.parent / "configs"
-    args = ["docker", "run", "-d", "--name", "eng", "--gpus", "all", "--ipc=host", "--shm-size", "16g",
-            "--ulimit", "memlock=-1", "--ulimit", "stack=67108864", "-p", "8000:8000",
+    gpuarg = "all" if gpus == "all" else f'"device={gpus}"'
+    args = ["docker", "run", "-d", "--name", name, "--gpus", gpuarg, "--ipc=host", "--shm-size", "16g",
+            "--ulimit", "memlock=-1", "--ulimit", "stack=67108864", "-p", f"{port}:{port}",
             "-v", f"{HF}:/root/.cache/huggingface", "-v", f"{cfgdir}:/cfg:ro", "-e", "HF_HUB_OFFLINE=1",
-            IMAGES[engine], *engine_cmd(engine, config)]
+            IMAGES[engine], *cmd]
     r = sh(args)
     if r.returncode:
         raise RuntimeError(r.stderr)
+
+
+def _wait(ports, names, timeout):
     t0 = time.time()
-    while time.time() - t0 < 900:
-        if sh("curl -sf localhost:8000/health").returncode == 0:
-            break
-        if "running" not in sh("docker inspect -f '{{.State.Status}}' eng").stdout:
-            break
+    while time.time() - t0 < timeout:
+        if all(sh(f"curl -sf localhost:{p}/health").returncode == 0 for p in ports):
+            return True
+        if any("running" not in sh(f"docker inspect -f '{{{{.State.Status}}}}' {n}").stdout for n in names):
+            return False
         time.sleep(5)
+    return False
+
+
+def start(engine, config, logdir, model=MODEL, tp=1, dp=1, timeout=900):
+    """Start the server(s) and return startup seconds. The client always talks to localhost:8000."""
+    stop_all()
+    t0 = time.time()
+    if engine == "trtllm" and dp > 1:
+        names, ports = [], []
+        for i in range(dp):
+            gpus = ",".join(str(g) for g in range(i * tp, (i + 1) * tp))
+            port = 8001 + i
+            _run(f"eng{i}", engine, engine_cmd(engine, config, model, tp, 1, port), gpus, port)
+            names.append(f"eng{i}"); ports.append(port)
+        conf = ("worker_processes 8;\nevents { worker_connections 16384; }\nhttp {\n upstream eng {\n  least_conn;\n"
+                + "".join(f"  server 127.0.0.1:{p};\n" for p in ports)
+                + "  keepalive 1024;\n }\n server {\n  listen 8000;\n  location / {\n   proxy_pass http://eng;\n"
+                "   proxy_http_version 1.1;\n   proxy_set_header Connection \"\";\n   proxy_buffering off;\n"
+                "   proxy_read_timeout 3600s;\n   proxy_send_timeout 3600s;\n  }\n }\n}\n")
+        (logdir / "nginx.conf").write_text(conf)
+        ok = _wait(ports, names, timeout)
+        if ok:
+            r = sh(["docker", "run", "-d", "--name", "lb", "--network", "host",
+                    "-v", f"{(logdir / 'nginx.conf').resolve()}:/etc/nginx/nginx.conf:ro", LB_IMAGE])
+            ok = r.returncode == 0 and _wait([8000], names + ["lb"], 60)
     else:
-        raise RuntimeError("server did not become healthy")
-    if sh("curl -sf localhost:8000/health").returncode:
-        (logdir / "server.log").write_text(sh("docker logs eng 2>&1").stdout)
-        raise RuntimeError(f"{engine} failed to start, see {logdir}/server.log")
+        _run("eng", engine, engine_cmd(engine, config, model, tp, dp))
+        names = ["eng"]
+        ok = _wait([8000], names, timeout)
+    if not ok:
+        (logdir / "server.log").write_text(server_logs())
+        stop_all()
+        raise RuntimeError(f"{engine} tp={tp} dp={dp} failed to start, see {logdir}/server.log")
     return time.time() - t0
 
 
@@ -134,13 +196,13 @@ def main():
                         print(f"[rep{rep}] {engine} {w} c={c}: {last[:200]}", flush=True)
                         if r.returncode:
                             (d / f"{w}_c{c}.err").write_text(r.stderr[-5000:])
-                (d / "server.log").write_text(sh("docker logs eng 2>&1").stdout[-2_000_000:])
-                sh("docker rm -f eng")
+                (d / "server.log").write_text(server_logs())
+                stop_all()
     finally:
         gpulog.terminate()
         gpulog.wait()
         gpufile.close()
-        sh("docker rm -f eng")
+        stop_all()
 
 
 if __name__ == "__main__":
