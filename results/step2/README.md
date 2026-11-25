@@ -28,7 +28,7 @@ Measured before the sweep ([step2_hw](../step2_hw)):
 |---|---|
 | Memory bandwidth | 746.6-746.8 GB/s on every GPU, the same as Step 1 |
 | Topology ([topo.txt](../step2_hw/topo.txt)) | GPUs 0-3 on NUMA node 0, 4-7 on node 1; every pair connects through PCIe host bridges (NODE) or across the CPU interconnect (SYS) |
-| Peer-to-peer | Not supported for any pair: TensorRT-LLM logs "P2P not supported between local devices" for all of them at start-up ([server.log](rep1/tp8/trtllm/server.log)), and `nvidia-smi topo -p2p r` showed NS for every pair. GPU-to-GPU traffic goes through host memory |
+| Peer-to-peer | Not supported for any pair: TensorRT-LLM logs "P2P not supported between local devices" for all of them at start-up ([server.log](rep1/tp8/trtllm/server.log)), and `nvidia-smi topo -p2p r` and `-p2p w` show NS (not supported) for every pair ([p2p.txt](../step2_hw/p2p.txt), recorded on the same instance on 2026-11-25). GPU-to-GPU traffic goes through host memory |
 | NCCL all-reduce, 10 KB | 55 µs (2 GPUs), 60 µs (4), 86 µs (8) |
 | NCCL all-reduce, 16-256 MB, bus bandwidth | 3.7-4.2 GB/s (2 GPUs), 4.4-4.6 GB/s (4), 2.3 GB/s (8) |
 
@@ -137,7 +137,7 @@ says 915,840.
 **A rough estimate (made after the run, not a prediction).** Qwen3-32B does 2 all-reduces per layer
 over 64 layers. For one 4,096-token prompt each all-reduce carries 4,096 x 5,120 x 2 bytes = 42 MB. At
 the measured 8-GPU speed that is about 32 ms each, or about **4.1 s of communication per prompt**. At
-256 users, tp8 completed one RAG request every 4.6 s on vLLM and 4.4 s on TRT-LLM, so communication
+256 users, tp8 completed one RAG request every 4.6 s on vLLM and 4.5 s on TRT-LLM, so communication
 alone accounts for most of the time. SGLang managed 3.3 s, faster than this estimate, so the estimate
 is not the whole story for that engine. The same estimate gives 1.8 s per prompt per tp4 replica and
 1.4 s per tp2 replica, and those replicas run side by side.
