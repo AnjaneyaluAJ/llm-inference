@@ -59,6 +59,28 @@ at 1 and 16 users it re-uses warm-up prompts and reads high (see prediction 5). 
 **Four copies on 2 GPUs each beat one copy on 8 GPUs by 2.2-7.6x at peak.** On RAG at 256 users,
 vLLM served 214 tokens/s as tp2dp4 and 28 as tp8.
 
+### Cost per million output tokens, at peak throughput
+
+At the on-demand price of $30.13 per hour (g6e.48xlarge, us-west-2, AWS Price List API, checked
+2026-11-25), divided by the peak throughput above.
+
+| split | engine | chat | RAG | generate |
+|---|---|---|---|---|
+| tp8 | vLLM | $45.74 | $298.92 | $11.58 |
+| tp8 | SGLang | $33.75 | $214.61 | $8.68 |
+| tp8 | TRT-LLM | $45.74 | $288.61 | $11.58 |
+| tp4dp2 | vLLM | $12.80 | $79.71 | $3.95 |
+| tp4dp2 | SGLang | $11.30 | $69.17 | $3.53 |
+| tp4dp2 | TRT-LLM | $13.02 | $76.09 | $4.08 |
+| tp2dp4 | vLLM | **$7.52** | **$39.11** | **$3.13** |
+| tp2dp4 | SGLang | $8.66 | $45.49 | $4.00 |
+| tp2dp4 | TRT-LLM | $7.64 | $40.05 | $3.15 |
+
+These are at peak throughput with no latency target. At those peaks, users wait seconds to minutes
+for the first token (see [summary.md](summary.md)). They are not comparable with Step 1's costs,
+which were measured within latency targets. The choice of split moves the cost 3.7-7.6x; the choice
+of engine at the best split, at most 16%.
+
 ### One user (generate, tokens/s)
 
 | split | ceiling | vLLM | SGLang | TRT-LLM | % of ceiling |
@@ -204,4 +226,4 @@ saved. These requests are counted as errors and excluded from loadgen's metrics,
 - No NVLink. On GPUs with fast peer-to-peer links, tensor parallelism costs far less and the
   ranking of splits could change.
 - Two repeats.
-- The cost estimates above were made after the run, not predicted.
+- The cost figures and the communication estimates were worked out after the run; they were not predictions.
