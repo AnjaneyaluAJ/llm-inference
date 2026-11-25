@@ -76,6 +76,10 @@ capture the raw SSE stream before anything is claimed. (First seen as a client c
 the crashed point was re-measured: `defaults/rep1/trtllm/generate_c256_rerun.json`.)
 Follow-up in the [AIPerf cross-check](../toolcmp/README.md): 1 more in 11,982 requests on loadgen, 0 in
 11,982 on AIPerf, and none in 6,144 requests with raw-stream capture on. Still not attributed.
+**Update from [Step 2](../step2/README.md#errors):** 279 more, with raw streams saved. The engine sent empty
+`text` in every chunk, so it is not the client. The failures follow the prompt (same counts on vLLM and
+TensorRT-LLM for the same seeded prompts, none on SGLang). Likely cause, not yet verified: `ignore_eos`
+forcing generation to continue after an immediate end-of-sequence token.
 
 ## Cross-check with NVIDIA AIPerf
 

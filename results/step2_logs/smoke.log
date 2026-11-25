@@ -1,0 +1,113 @@
++ cd /data/repo
++ R=/data/results/hw
++ nvidia-smi topo -m
++ for g in 0 1 2 3 4 5 6 7
++ docker run --rm --gpus device=0 -v /data/repo/bench:/b --entrypoint python3 vllm/vllm-openai:v0.34.0 /b/membw.py
++ for g in 0 1 2 3 4 5 6 7
++ docker run --rm --gpus device=1 -v /data/repo/bench:/b --entrypoint python3 vllm/vllm-openai:v0.34.0 /b/membw.py
++ for g in 0 1 2 3 4 5 6 7
++ docker run --rm --gpus device=2 -v /data/repo/bench:/b --entrypoint python3 vllm/vllm-openai:v0.34.0 /b/membw.py
++ for g in 0 1 2 3 4 5 6 7
++ docker run --rm --gpus device=3 -v /data/repo/bench:/b --entrypoint python3 vllm/vllm-openai:v0.34.0 /b/membw.py
++ for g in 0 1 2 3 4 5 6 7
++ docker run --rm --gpus device=4 -v /data/repo/bench:/b --entrypoint python3 vllm/vllm-openai:v0.34.0 /b/membw.py
++ for g in 0 1 2 3 4 5 6 7
++ docker run --rm --gpus device=5 -v /data/repo/bench:/b --entrypoint python3 vllm/vllm-openai:v0.34.0 /b/membw.py
++ for g in 0 1 2 3 4 5 6 7
++ docker run --rm --gpus device=6 -v /data/repo/bench:/b --entrypoint python3 vllm/vllm-openai:v0.34.0 /b/membw.py
++ for g in 0 1 2 3 4 5 6 7
++ docker run --rm --gpus device=7 -v /data/repo/bench:/b --entrypoint python3 vllm/vllm-openai:v0.34.0 /b/membw.py
++ docker run --rm --gpus all --ipc=host -v /data/repo/bench:/b --entrypoint python3 vllm/vllm-openai:v0.34.0 /b/allreduce.py
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+2 [(10240, 54.7, 0.2), (163840, 74.1, 2.2), (1310720, 353.1, 3.7), (16777216, 3956.5, 4.2), (268435456, 71910.8, 3.7)]
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+4 [(10240, 60.2, 0.3), (163840, 85.5, 2.9), (1310720, 480.8, 4.1), (16777216, 5519.8, 4.6), (268435456, 90980.9, 4.4)]
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+8 [(10240, 86.4, 0.2), (163840, 151.9, 1.9), (1310720, 905.1, 2.5), (16777216, 13022.1, 2.3), (268435456, 204469.2, 2.3)]
++ echo HW_DONE
+HW_DONE
++ /data/venv/bin/python bench/multi_compare.py --reps 1 --out /data/results/step2_smoke --only tp8:vllm,tp4dp2:sglang,tp2dp4:trtllm
+[rep1] tp8 vllm up in 137s
+[rep1] tp8 vllm chat c=1 loadgen (first=loadgen): {"requests_ok": 10, "requests_err": 0, "req_per_s": 0.164182117554448, "output_tok_per_s": 42.03062209393869, "ttft_ms": {"50": 1122.95, "90": 1126.0,
+[rep1] tp8 vllm chat c=1 aiperf (first=loadgen): out tok/s 42.5, ttft p50 1117 ms
+[rep1] tp8 vllm chat c=16 aiperf (first=aiperf): out tok/s 164.1, ttft p50 6489 ms
+[rep1] tp8 vllm chat c=16 loadgen (first=aiperf): {"requests_ok": 64, "requests_err": 0, "req_per_s": 0.5954810523381966, "output_tok_per_s": 152.44314939857833, "ttft_ms": {"50": 6530.68, "90": 11963
+[rep1] tp8 vllm chat c=64 loadgen (first=loadgen): {"requests_ok": 256, "requests_err": 0, "req_per_s": 0.7127495357891158, "output_tok_per_s": 182.46388116201365, "ttft_ms": {"50": 8721.4, "90": 43434
+[rep1] tp8 vllm chat c=64 aiperf (first=loadgen): out tok/s 186.3, ttft p50 8713 ms
+[rep1] tp8 vllm chat c=256 aiperf (first=aiperf): out tok/s 176.8, ttft p50 9249 ms
+[rep1] tp8 vllm chat c=256 loadgen (first=aiperf): {"requests_ok": 1024, "requests_err": 0, "req_per_s": 0.691582998016842, "output_tok_per_s": 177.04524749231155, "ttft_ms": {"50": 9237.18, "90": 1754
+[rep1] tp8 vllm rag c=1 loadgen (first=loadgen): {"requests_ok": 10, "requests_err": 0, "req_per_s": 0.14588839773617676, "output_tok_per_s": 18.673714910230625, "ttft_ms": {"50": 4365.06, "90": 4371
+[rep1] tp8 vllm rag c=1 aiperf (first=loadgen): out tok/s 19.8, ttft p50 4359 ms
+[rep1] tp8 vllm rag c=16 aiperf (first=aiperf): out tok/s 30.9, ttft p50 10888 ms
+[rep1] tp8 vllm rag c=16 loadgen (first=aiperf): {"requests_ok": 64, "requests_err": 0, "req_per_s": 0.21512528057464664, "output_tok_per_s": 27.53603591355477, "ttft_ms": {"50": 10887.51, "90": 4435
+[rep1] tp8 vllm rag c=64 loadgen (first=loadgen): {"requests_ok": 256, "requests_err": 0, "req_per_s": 0.2181441386060202, "output_tok_per_s": 27.922449741570585, "ttft_ms": {"50": 11150.75, "90": 170
+[rep1] tp8 vllm rag c=64 aiperf (first=loadgen): out tok/s 28.8, ttft p50 11146 ms
+[rep1] tp8 vllm rag c=256 aiperf (first=aiperf): out tok/s 27.9, ttft p50 892447 ms
+[rep1] tp8 vllm rag c=256 loadgen (first=aiperf): {"requests_ok": 458, "requests_err": 566, "req_per_s": 0.16301849796890006, "output_tok_per_s": 20.866367740019207, "ttft_ms": {"50": 444291.5, "90": 
+[rep1] tp8 vllm generate c=1 loadgen (first=loadgen): {"requests_ok": 10, "requests_err": 0, "req_per_s": 0.04976648925954582, "output_tok_per_s": 50.96088500177492, "ttft_ms": {"50": 140.18, "90": 143.3,
+[rep1] tp8 vllm generate c=1 aiperf (first=loadgen): out tok/s 50.6, ttft p50 138 ms
+[rep1] tp8 vllm generate c=16 aiperf (first=aiperf): out tok/s 415.9, ttft p50 2149 ms
+[rep1] tp8 vllm generate c=16 loadgen (first=aiperf): {"requests_ok": 63, "requests_err": 1, "req_per_s": 0.4009017395086476, "output_tok_per_s": 410.52338125685515, "ttft_ms": {"50": 2166.77, "90": 2191.
+[rep1] tp8 vllm generate c=64 loadgen (first=loadgen): {"requests_ok": 252, "requests_err": 4, "req_per_s": 0.7033005413739852, "output_tok_per_s": 720.1797543669609, "ttft_ms": {"50": 6091.1, "90": 6665.4
+[rep1] tp8 vllm generate c=64 aiperf (first=loadgen): out tok/s 729.1, ttft p50 5284 ms
+[rep1] tp8 vllm generate c=256 aiperf (first=aiperf): out tok/s 730.3, ttft p50 6676 ms
+[rep1] tp8 vllm generate c=256 loadgen (first=aiperf): {"requests_ok": 1009, "requests_err": 15, "req_per_s": 0.7077042552330848, "output_tok_per_s": 724.6891573586788, "ttft_ms": {"50": 6697.65, "90": 220
+[rep1] tp8 vllm quality: {"n": 100, "accuracy": 0.94}
+[rep1] tp2dp4 trtllm up in 193s
+[rep1] tp2dp4 trtllm chat c=1 loadgen (first=loadgen): {"requests_ok": 10, "requests_err": 0, "req_per_s": 0.07981794054304932, "output_tok_per_s": 20.433392779020625, "ttft_ms": {"50": 511.99, "90": 523.6
+[rep1] tp2dp4 trtllm chat c=1 aiperf (first=loadgen): out tok/s 20.4, ttft p50 490 ms
+[rep1] tp2dp4 trtllm chat c=16 aiperf (first=aiperf): out tok/s 269.1, ttft p50 1336 ms
+[rep1] tp2dp4 trtllm chat c=16 loadgen (first=aiperf): {"requests_ok": 64, "requests_err": 0, "req_per_s": 1.05006666274953, "output_tok_per_s": 268.8170656638797, "ttft_ms": {"50": 1082.68, "90": 1963.14,
+[rep1] tp2dp4 trtllm chat c=64 loadgen (first=loadgen): {"requests_ok": 256, "requests_err": 0, "req_per_s": 2.6147418845695074, "output_tok_per_s": 669.3739224497939, "ttft_ms": {"50": 5359.2, "90": 7602.2
+[rep1] tp2dp4 trtllm chat c=64 aiperf (first=loadgen): out tok/s 675.4, ttft p50 4458 ms
+[rep1] tp2dp4 trtllm chat c=256 aiperf (first=aiperf): out tok/s 1092.5, ttft p50 10101 ms
+[rep1] tp2dp4 trtllm chat c=256 loadgen (first=aiperf): {"requests_ok": 1024, "requests_err": 0, "req_per_s": 4.253133969350383, "output_tok_per_s": 1088.802296153698, "ttft_ms": {"50": 10305.88, "90": 2273
+[rep1] tp2dp4 trtllm rag c=1 loadgen (first=loadgen): {"requests_ok": 10, "requests_err": 0, "req_per_s": 0.12604178534881091, "output_tok_per_s": 16.133348524647797, "ttft_ms": {"50": 1856.7, "90": 1992.
+[rep1] tp2dp4 trtllm rag c=1 aiperf (first=loadgen): out tok/s 16.1, ttft p50 1974 ms
+[rep1] tp2dp4 trtllm rag c=16 aiperf (first=aiperf): out tok/s 139.4, ttft p50 3955 ms
+[rep1] tp2dp4 trtllm rag c=16 loadgen (first=aiperf): {"requests_ok": 64, "requests_err": 0, "req_per_s": 1.0589536299319349, "output_tok_per_s": 135.54606463128766, "ttft_ms": {"50": 3964.22, "90": 6130.
+[rep1] tp2dp4 trtllm rag c=64 loadgen (first=loadgen): {"requests_ok": 256, "requests_err": 0, "req_per_s": 1.5686444886029645, "output_tok_per_s": 200.78649454117945, "ttft_ms": {"50": 7204.7, "90": 19706
+[rep1] tp2dp4 trtllm rag c=64 aiperf (first=loadgen): out tok/s 205.5, ttft p50 7113 ms
+[rep1] tp2dp4 trtllm rag c=256 aiperf (first=aiperf): out tok/s 211.8, ttft p50 110008 ms
+[rep1] tp2dp4 trtllm rag c=256 loadgen (first=aiperf): {"requests_ok": 1024, "requests_err": 0, "req_per_s": 1.6249906539041434, "output_tok_per_s": 207.99880369973036, "ttft_ms": {"50": 112480.65, "90": 1
+[rep1] tp2dp4 trtllm generate c=1 loadgen (first=loadgen): {"requests_ok": 10, "requests_err": 0, "req_per_s": 0.02071503020585589, "output_tok_per_s": 21.21219093079643, "ttft_ms": {"50": 120.0, "90": 126.55,
+[rep1] tp2dp4 trtllm generate c=1 aiperf (first=loadgen): out tok/s 21.2, ttft p50 122 ms
+[rep1] tp2dp4 trtllm generate c=16 aiperf (first=aiperf): out tok/s 302.7, ttft p50 238 ms
+[rep1] tp2dp4 trtllm generate c=16 loadgen (first=aiperf): {"requests_ok": 63, "requests_err": 1, "req_per_s": 0.29652833610450774, "output_tok_per_s": 303.6450161710159, "ttft_ms": {"50": 248.04, "90": 307.62
+[rep1] tp2dp4 trtllm generate c=64 loadgen (first=loadgen): {"requests_ok": 252, "requests_err": 4, "req_per_s": 0.955102639168351, "output_tok_per_s": 978.0251025083915, "ttft_ms": {"50": 782.53, "90": 977.63,
+[rep1] tp2dp4 trtllm generate c=64 aiperf (first=loadgen): out tok/s 994.3, ttft p50 717 ms
+[rep1] tp2dp4 trtllm generate c=256 aiperf (first=aiperf): out tok/s 2691.4, ttft p50 3350 ms
+[rep1] tp2dp4 trtllm generate c=256 loadgen (first=aiperf): {"requests_ok": 1008, "requests_err": 16, "req_per_s": 2.5874543744657514, "output_tok_per_s": 2649.5532794529295, "ttft_ms": {"50": 3425.0, "90": 389
+[rep1] tp2dp4 trtllm quality: {"n": 100, "accuracy": 0.95}
+[rep1] tp4dp2 sglang up in 158s
+[rep1] tp4dp2 sglang chat c=1 loadgen (first=loadgen): {"requests_ok": 10, "requests_err": 0, "req_per_s": 0.1356134530570903, "output_tok_per_s": 34.71704398261512, "ttft_ms": {"50": 512.51, "90": 589.48,
+[rep1] tp4dp2 sglang chat c=1 aiperf (first=loadgen): out tok/s 35.0, ttft p50 504 ms
+[rep1] tp4dp2 sglang chat c=16 aiperf (first=aiperf): out tok/s 330.0, ttft p50 2846 ms
+[rep1] tp4dp2 sglang chat c=16 loadgen (first=aiperf): {"requests_ok": 64, "requests_err": 0, "req_per_s": 1.2728460919552158, "output_tok_per_s": 325.84859954053525, "ttft_ms": {"50": 1950.17, "90": 3870.
+[rep1] tp4dp2 sglang chat c=64 loadgen (first=loadgen): {"requests_ok": 256, "requests_err": 0, "req_per_s": 2.2543693141043963, "output_tok_per_s": 577.1185444107255, "ttft_ms": {"50": 8577.52, "90": 14867
+[rep1] tp4dp2 sglang chat c=64 aiperf (first=loadgen): out tok/s 577.8, ttft p50 6808 ms
+[rep1] tp4dp2 sglang chat c=256 aiperf (first=aiperf): out tok/s 735.0, ttft p50 31560 ms
+[rep1] tp4dp2 sglang chat c=256 loadgen (first=aiperf): {"requests_ok": 1024, "requests_err": 0, "req_per_s": 2.881807407270591, "output_tok_per_s": 737.7426962612712, "ttft_ms": {"50": 32122.17, "90": 5620
+[rep1] tp4dp2 sglang rag c=1 loadgen (first=loadgen): {"requests_ok": 10, "requests_err": 0, "req_per_s": 0.18447000424663337, "output_tok_per_s": 23.612160543569072, "ttft_ms": {"50": 1960.7, "90": 1972.
+[rep1] tp4dp2 sglang rag c=1 aiperf (first=loadgen): out tok/s 24.3, ttft p50 1962 ms
+[rep1] tp4dp2 sglang rag c=16 aiperf (first=aiperf): out tok/s 105.9, ttft p50 5191 ms
+[rep1] tp4dp2 sglang rag c=16 loadgen (first=aiperf): {"requests_ok": 64, "requests_err": 0, "req_per_s": 0.7880458016642492, "output_tok_per_s": 100.8698626130239, "ttft_ms": {"50": 6164.53, "90": 13933.
+[rep1] tp4dp2 sglang rag c=64 loadgen (first=loadgen): {"requests_ok": 256, "requests_err": 0, "req_per_s": 0.9128077868752438, "output_tok_per_s": 116.8393967200312, "ttft_ms": {"50": 21828.55, "90": 5084
+[rep1] tp4dp2 sglang rag c=64 aiperf (first=loadgen): out tok/s 116.8, ttft p50 14019 ms
+[rep1] tp4dp2 sglang rag c=256 aiperf (first=aiperf): out tok/s 120.9, ttft p50 175967 ms
+[rep1] tp4dp2 sglang rag c=256 loadgen (first=aiperf): {"requests_ok": 1024, "requests_err": 0, "req_per_s": 0.9443072132623657, "output_tok_per_s": 120.8713232975828, "ttft_ms": {"50": 176095.07, "90": 24
+[rep1] tp4dp2 sglang generate c=1 loadgen (first=loadgen): {"requests_ok": 10, "requests_err": 0, "req_per_s": 0.03628832654201916, "output_tok_per_s": 37.15924637902762, "ttft_ms": {"50": 108.27, "90": 112.59
+[rep1] tp4dp2 sglang generate c=1 aiperf (first=loadgen): out tok/s 37.0, ttft p50 101 ms
+[rep1] tp4dp2 sglang generate c=16 aiperf (first=aiperf): out tok/s 470.2, ttft p50 365 ms
+[rep1] tp4dp2 sglang generate c=16 loadgen (first=aiperf): {"requests_ok": 64, "requests_err": 0, "req_per_s": 0.4583612591929877, "output_tok_per_s": 469.3619294136194, "ttft_ms": {"50": 330.0, "90": 534.28, 
+[rep1] tp4dp2 sglang generate c=64 loadgen (first=loadgen): {"requests_ok": 256, "requests_err": 0, "req_per_s": 1.2116735536642993, "output_tok_per_s": 1240.7537189522425, "ttft_ms": {"50": 594.32, "90": 2057.
+[rep1] tp4dp2 sglang generate c=64 aiperf (first=loadgen): out tok/s 1239.2, ttft p50 792 ms
+[rep1] tp4dp2 sglang generate c=256 aiperf (first=aiperf): out tok/s 2346.5, ttft p50 2171 ms
+[rep1] tp4dp2 sglang generate c=256 loadgen (first=aiperf): {"requests_ok": 1024, "requests_err": 0, "req_per_s": 2.316093290111893, "output_tok_per_s": 2371.6795290745786, "ttft_ms": {"50": 2146.36, "90": 6026
+[rep1] tp4dp2 sglang quality: {"n": 100, "accuracy": 0.95}
+STEP2_DONE 2026-11-22T20:10:14Z
++ echo SMOKE_DONE
+SMOKE_DONE
