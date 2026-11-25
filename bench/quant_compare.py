@@ -41,7 +41,7 @@ def main():
     ap.add_argument("--first-rep", type=int, default=1)
     ap.add_argument("--out", default="/data/results/step3")
     ap.add_argument("--only", default="", help="comma list of fmt/split:engine, e.g. fp8/tp1dp8:vllm")
-    ap.add_argument("--fallback", default="", help="comma list of fmt:engine that use the fallback checkpoint")
+    ap.add_argument("--fallback", default="", help="comma list of fmt:engine or fmt/split:engine that use the fallback checkpoint")
     ap.add_argument("--startup-timeout", type=int, default=2400)
     a = ap.parse_args()
     only = set(filter(None, a.only.split(",")))
@@ -65,7 +65,7 @@ def main():
                     tag = f"{fmt}/{split}:{engine}"
                     if only and tag not in only:
                         continue
-                    model = FALLBACK[fmt] if f"{fmt}:{engine}" in fallback else MODELS[fmt]
+                    model = FALLBACK[fmt] if (f"{fmt}:{engine}" in fallback or tag in fallback) else MODELS[fmt]
                     tp, dp = SPLITS[split]
                     d = root / (f"{fmt}_{split}/{engine}" if a.check else f"rep{rep}/{fmt}_{split}/{engine}")
                     if a.check and (d / "check.json").exists():
