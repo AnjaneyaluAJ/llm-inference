@@ -78,8 +78,8 @@ At the on-demand price of $30.13 per hour (g6e.48xlarge, us-west-2, AWS Price Li
 
 These are at peak throughput with no latency target. At those peaks, users wait seconds to minutes
 for the first token (see [summary.md](summary.md)). They are not comparable with Step 1's costs,
-which were measured within latency targets. The choice of split moves the cost 3.7-7.6x; the choice
-of engine at the best split, at most 16%.
+which were measured within latency targets. Going from tp8 to tp2dp4 cuts the cost 2.2-7.6x,
+depending on engine and workload. At tp2dp4 the engines differ by 15-28%.
 
 ### One user (generate, tokens/s)
 
