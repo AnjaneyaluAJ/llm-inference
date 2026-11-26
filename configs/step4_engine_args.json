@@ -1,0 +1,15 @@
+{
+ "_comment": "Engine options per Step 4 configuration (docs/step4_agent_kv_plan.md). Offload flags confirmed against each image's --help in the smoke test.",
+ "vllm": {
+  "base": ["--max-model-len", "32768", "--tensor-parallel-size", "2", "--enable-prompt-tokens-details"],
+  "nocache": ["--no-enable-prefix-caching"],
+  "gpu": [],
+  "cpu": ["--kv-transfer-config", "{\"kv_connector\":\"OffloadingConnector\",\"kv_role\":\"kv_both\",\"kv_connector_extra_config\":{\"cpu_bytes_to_use\":161061273600}}"]
+ },
+ "sglang": {
+  "base": ["--context-length", "32768", "--tp-size", "2", "--enable-cache-report"],
+  "nocache": ["--disable-radix-cache"],
+  "gpu": [],
+  "cpu": ["--enable-hierarchical-cache", "--hicache-size", "150"]
+ }
+}
