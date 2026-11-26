@@ -75,7 +75,8 @@ chat and generate for INT4 tp1dp8 on vLLM, but 26 s on RAG (all combinations are
 
 Ceiling = 746.7 GB/s per GPU x GPUs per copy / weights on disk (the plan's figures; the INT4 ceiling uses
 the AWQ size of 19.3 GB, and the Red Hat checkpoint vLLM actually loaded takes 18.12 GiB = 19.5 GB per GPU,
-a ceiling of 38.4 tok/s). On one GPU, vLLM FP8 and both INT4 engines reach 96-98% of the ceiling. With
+a ceiling of 38.4 tok/s). On one GPU, vLLM FP8 and both INT4 engines reach 96-99% of the ceiling (99% for
+SGLang INT4 against 38.4). With
 two GPUs per copy, every format loses a share to communication: BF16 reaches 92-93%, INT4 74-78%, FP8
 79-83% on vLLM and TRT-LLM. SGLang FP8 is lower on both splits (61-72%).
 
@@ -134,8 +135,8 @@ from its running `#token` / `token usage` lines.
 |---|---|---|---|
 | 1 | One user: INT4 tp2 fastest of all; FP8 tp1 no faster than BF16 tp2 | INT4 tp2 fastest (SGLang 60.1, vLLM 57.2). FP8 tp1 21.0 (vLLM) and 15.7 (SGLang) vs BF16 tp2 21.0-21.3. 7 of 12 inside the predicted ranges: one-GPU copies came closer to their ceilings than predicted, SGLang FP8 fell short | **held** (the ranges were off for 5 of 12) |
 | 2 | Best FP8 has at least 1.4x BF16 tp2dp4's peak on chat and generate | Chat 1.41x (1,591 vs 1,128). Generate 1.35x (3,610 vs 2,678). Same engine: chat 1.15-1.48x, generate 1.33-1.35x | **wrong on generate**, barely held on chat |
-| 3 | At 256 users the best FP8 combination beats the best INT4 one on chat and generate | INT4 is 1.8-2.3x FP8 on chat and generate, and 1.5-1.6x on RAG, on both engines | **wrong** |
-| 4 | FP8 tp1dp8 has the least KV room (20-30k tokens per copy), so tp2dp4 beats it on RAG and chat at 256 users; INT4 tp1dp8 gives INT4's highest generate peak | KV room 30k (vLLM), ~20k (SGLang): right. But tp1dp8 beats tp2dp4 on chat (1.16-1.28x) and RAG (1.38-1.50x). INT4 tp1dp8 is INT4's best on generate (1.59-1.76x tp2dp4): right | **wrong** on the main claim |
+| 3 | At 256 users the best FP8 combination beats the best INT4 one on chat and generate | Best INT4 is 1.8x best FP8 on chat and generate (1.8-2.3x within each engine), and 1.5-1.6x on RAG | **wrong** |
+| 4 | FP8 tp1dp8 has the least KV room (20-30k tokens per copy), so tp2dp4 beats it on RAG and chat at 256 users; INT4 tp1dp8 gives INT4's highest generate peak | KV room 30k (vLLM), ~20k (SGLang): right. But tp1dp8 beats tp2dp4 on chat (1.16-1.28x) and RAG (1.38-1.50x). INT4 tp1dp8 is INT4's best on generate (1.59-1.76x tp2dp4): right | **partly wrong**: the KV and INT4 parts held, the main claim did not |
 | 5 | FP8 within 1 point of BF16, INT4 within 3; same final answer on ≥95% (FP8) and ≥90% (INT4) of questions | Accuracy: INT4 within 2.2 points, FP8 within 1 point except SGLang tp1 at -1.1 (not significant). Agreement: INT4 90.4-91.4%, FP8 93.4-95.1% (2 of 5 reach 95%) | **partly wrong**: the FP8 agreement bar was set above the 96-97% at which BF16 engines agree with each other |
 | 6 | At least one engine cannot serve at least one official checkpoint without the fallback; TRT-LLM with AWQ most likely | No engine served the official AWQ checkpoint correctly. TRT-LLM could not start INT4 at all, or FP8 on one GPU | **held**, more broadly than predicted |
 
@@ -149,13 +150,15 @@ The plan assumed FP8 would use the L40S's FP8 tensor cores. The server logs show
   vLLM v0.34.0 stores the weights in FP8 and computes in 16-bit, exactly as it does with INT4 (Marlin
   kernels for both).
 - **SGLang:** runs FP8 x FP8, but with "Using default W8A8 Block FP8 kernel config. Performance might be
-  sub-optimal!": it has no tuned kernel configuration for the L40S.
+  sub-optimal!": it has no tuned kernel configuration for the L40S ([tp2 log](rep1/fp8_tp2dp4/sglang/server.log),
+  [tp1 start-up check](check/fp8_tp1dp8/sglang/server.log); the repeat-1 tp1 log was cut at 2 MB).
 - **TensorRT-LLM:** runs its FP8 block-scaling GEMM; its autotuner logs "using the fallback tactic" for
   some shapes.
 
 So on vLLM, FP8 and INT4 did the same thing, reading 8-bit or 4-bit weights and multiplying in 16-bit,
-and INT4 simply read half the bytes. The engines that did use FP8 arithmetic were not faster than
-vLLM's weight-only path: at one user SGLang FP8 reached 61-72% of the ceiling vs vLLM's 83-96%.
+and INT4 simply read half the bytes. Whether FP8 arithmetic helped is not clear: under load TRT-LLM FP8
+tp2dp4 beat vLLM's weight-only FP8 tp2dp4 by 9% on generate (3,549 vs 3,244), while SGLang FP8 was the
+slowest. None came close to INT4.
 
 Prediction 3 also assumed that unpacking 4-bit weights would cost more as the batch grew. That needs a
 batch large enough for the arithmetic, not the weight reads, to set the speed. At 256 users on tp1dp8,
@@ -188,12 +191,15 @@ The start-up check ran 20 GSM8K questions on every combination before the sweep
 | `Qwen/Qwen3-32B-AWQ`, tp1 and tp2 | starts, **0 of 20 correct** | starts, **0 of 20 correct** | tp1: out of memory; tp2: `AssertionError` while loading |
 | `RedHatAI/Qwen3-32B-quantized.w4a16` (fallback), tp1 and tp2 | 17-18 of 20 | 17-18 of 20 | `TypeError` in its compressed-tensors config parser |
 
-- **The official AWQ checkpoint** loaded on vLLM and SGLang without an error and then generated
-  repeated tokens ("locklocklock...", [quality.jsonl](check/int4_tp1dp8/vllm/quality.jsonl)). A server
-  that starts cleanly is not proof that it works; only the quality check caught this. I did not find
-  the cause. All INT4 results here use the Red Hat GPTQ checkpoint.
-- **TensorRT-LLM on one GPU:** the FP8 weights take 32.5 GiB per GPU (as vLLM loaded
-  them) of the L40S's 44.4 GiB, and at default
+- **The official AWQ checkpoint** started on vLLM and SGLang and then generated repeated tokens:
+  "locklocklock..." on vLLM ([quality.jsonl](check/int4_tp1dp8/vllm/quality.jsonl)) and "!!!!!!..."
+  on SGLang ([quality.jsonl](check/int4_tp1dp8/sglang/quality.jsonl)), on all 20 questions. A server
+  that starts is not proof that it works; only the quality check caught this. The cause is not
+  confirmed. One clue: each vLLM AWQ log has 3,096 warnings like "Attempted to load weight
+  embed_tokens.weight with dtype torch.bfloat16 into parameter with dtype torch.float16", and the
+  Red Hat checkpoint's log has none. All INT4 results here use the Red Hat GPTQ checkpoint.
+- **TensorRT-LLM on one GPU:** PyTorch had 32.5-32.8 GiB allocated of the L40S's 44.4 GiB when it
+  failed, and at default
   settings TensorRT-LLM ran out of memory during start-up. Lowering its memory settings might have made
   it fit; that is a tuning step outside this plan.
 
